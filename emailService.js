@@ -19,24 +19,24 @@ const createEmailTemplate = (post) => {
                     padding: 20px;
                 }
                 .header {
-                    text-align: center;
+                    text-align: left;
                     margin-bottom: 30px;
                 }
                 .content {
                     margin-bottom: 30px;
-                    text-align: center;
+                    text-align: left;
                 }
                 .image-container {
                     display: block;
                     width: 100%;
                     max-width: 600px;
-                    margin: 0 auto 10px;
+                    margin: 0 0 10px;
                 }
                 .image {
                     width: 100%;
                     height: auto;
                     display: block;
-                    margin: 0 auto;
+                    margin: 0;
                 }
                 .video-link {
                     display: inline-block;
@@ -51,9 +51,10 @@ const createEmailTemplate = (post) => {
                 }
                 .body-text {
                     margin-bottom: 30px;
+                    text-align: left;
                 }
                 .footer {
-                    text-align: center;
+                    text-align: left;
                     font-size: 12px;
                     color: #666;
                 }

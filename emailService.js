@@ -18,6 +18,12 @@ const createEmailTemplate = (post) => {
                     margin: 0 auto;
                     padding: 20px;
                 }
+                .title {
+                    font-size: 24px;
+                    font-weight: bold;
+                    margin-bottom: 25px;
+                    color: #333;
+                }
                 .content {
                     margin-bottom: 30px;
                     text-align: left;
@@ -57,6 +63,7 @@ const createEmailTemplate = (post) => {
             </style>
         </head>
         <body>
+            <div class="title">${post.title}</div>
             <div class="content">
                 ${post.image ? `
                     <div class="image-container">
@@ -89,7 +96,7 @@ const sendEmails = async (post, recipients) => {
                 email: process.env.SENDGRID_FROM_EMAIL,
                 name: process.env.SENDGRID_FROM_NAME || 'Your Company Name'
             },
-            subject: `New Update: ${post.title}`,
+            subject: `${post.title}`,
             html: emailTemplate,
         };
 

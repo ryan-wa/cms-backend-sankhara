@@ -18,10 +18,6 @@ const createEmailTemplate = (post) => {
                     margin: 0 auto;
                     padding: 20px;
                 }
-                .header {
-                    text-align: left;
-                    margin-bottom: 30px;
-                }
                 .content {
                     margin-bottom: 30px;
                     text-align: left;
@@ -61,9 +57,6 @@ const createEmailTemplate = (post) => {
             </style>
         </head>
         <body>
-            <div class="header">
-                <h1>${post.title}</h1>
-            </div>
             <div class="content">
                 ${post.image ? `
                     <div class="image-container">

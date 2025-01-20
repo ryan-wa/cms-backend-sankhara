@@ -143,13 +143,23 @@ const processBodyContent = (blocks) => {
 };
 
 module.exports.formatResponse = (latestPost) => {
+    // Create array of grid images from individual fields
+    const gridImages = [];
+    for (let i = 1; i <= 6; i++) {
+        const imageField = `image_${i}`;
+        if (latestPost[imageField]) {
+            gridImages.push(buildImageUrl(latestPost[imageField]));
+        }
+    }
+
     return {
         title: latestPost.title,
         slug: latestPost.slug,
         publishedAt: latestPost.publishedAt,
         image: latestPost.image ? buildImageUrl(latestPost.image) : null,
         video: latestPost.video ? buildVideoUrl(latestPost.video) : null,
-        body: processBodyContent(latestPost.body)
+        body: processBodyContent(latestPost.body),
+        gridImages: gridImages
     };
 };
 

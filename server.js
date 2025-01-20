@@ -18,14 +18,20 @@ const sanityClient = createClient({
 // Simple route: GET /sendEmailUpdate
 app.get('/sendEmailUpdate', async (req, res) => {
   try {
-    // Query the latest post and its recipient field
+    // Updated query to use individual image fields
     const query = `*[_type == "post"] | order(_createdAt desc)[0]{
       title,
       slug,
       publishedAt,
       image,
       video,
-      body
+      body,
+      image_1,
+      image_2,
+      image_3,
+      image_4,
+      image_5,
+      image_6
     }`;
 
     const [latestPost, recipients] = await Promise.all([

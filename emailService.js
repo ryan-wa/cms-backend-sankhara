@@ -2,6 +2,16 @@ const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const createEmailTemplate = (post) => {
+    // Create rows of 3 images each
+    const createImageRows = (images) => {
+        const rows = [];
+        for (let i = 0; i < Math.min(images.length, 6); i += 3) {
+            const row = images.slice(i, i + 3);
+            rows.push(row);
+        }
+        return rows;
+    };
+
     return `
         <!DOCTYPE html>
         <html>
@@ -60,10 +70,48 @@ const createEmailTemplate = (post) => {
                     font-size: 12px;
                     color: #666;
                 }
+                .grid-container {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 10px;
+                    margin-bottom: 25px;
+                    max-width: 600px;
+                }
+                
+                .grid-image {
+                    width: 100%;
+                    height: 180px;
+                    object-fit: cover;
+                    display: block;
+                }
+                
+                @media screen and (max-width: 480px) {
+                    .grid-container {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                    
+                    .grid-image {
+                        height: 140px;
+                    }
+                }
             </style>
         </head>
         <body>
             <div class="title">${post.title}</div>
+            ${post.gridImages && post.gridImages.length > 0 ? `
+                <table cellspacing="10" cellpadding="0" border="0" style="width: 100%; max-width: 600px; margin-bottom: 25px;">
+                    ${createImageRows(post.gridImages).map(row => `
+                        <tr>
+                            ${row.map(imgUrl => `
+                                <td style="width: 33.33%; padding: 5px;">
+                                    <img src="${imgUrl}" alt="Grid Image" style="width: 100%; height: 180px; object-fit: cover; display: block;">
+                                </td>
+                            `).join('')}
+                            ${row.length < 3 ? `<td colspan="${3 - row.length}" style="width: ${(3 - row.length) * 33.33}%;"></td>` : ''}
+                        </tr>
+                    `).join('')}
+                </table>
+            ` : ''}
             <div class="content">
                 ${post.image ? `
                     <div class="image-container">

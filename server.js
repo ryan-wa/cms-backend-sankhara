@@ -50,7 +50,7 @@ app.get('/sendEmailUpdateTest', async (req, res) => {
     const formattedPost = formatResponse(latestPost);
 
     // Send emails to all recipients
-    await sendEmails(formattedPost, recipients);
+    await sendEmails(formattedPost, recipients, 'ryan@sankhara.com', 'Ryan');
 
     res.status(200).json({
       message: 'Successfully sent email updates to all recipients',

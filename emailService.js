@@ -134,7 +134,7 @@ const createEmailTemplate = (post) => {
     `;
 };
 
-const sendEmails = async (post, recipients) => {
+const sendEmails = async (post, recipients, senderEmail = process.env.SENDGRID_FROM_EMAIL, senderName = process.env.SENDGRID_FROM_NAME) => {
     try {
         const emailTemplate = createEmailTemplate(post);
         
@@ -145,8 +145,8 @@ const sendEmails = async (post, recipients) => {
         const msg = {
             personalizations,
             from: {
-                email: process.env.SENDGRID_FROM_EMAIL,
-                name: process.env.SENDGRID_FROM_NAME || 'Your Company Name'
+                email: senderEmail,
+                name: senderName
             },
             subject: `${post.title}`,
             html: emailTemplate,

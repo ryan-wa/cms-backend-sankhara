@@ -23,15 +23,15 @@ app.get('/sendEmailUpdate', async (req, res) => {
       title,
       slug,
       publishedAt,
-      image,
+      mainImage,
       video,
       body,
-      image_1,
-      image_2,
-      image_3,
-      image_4,
-      image_5,
-      image_6
+      gridImage1,
+      gridImage2,
+      gridImage3,
+      gridImage4,
+      gridImage5,
+      gridImage6
     }`;
 
     const [latestPost, recipients] = await Promise.all([

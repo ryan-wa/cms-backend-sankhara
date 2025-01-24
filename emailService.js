@@ -94,10 +94,19 @@ const createEmailTemplate = (post) => {
                         height: 140px;
                     }
                 }
+                .main-image {
+                    width: 100%;
+                    max-width: 600px;
+                    height: auto;
+                    margin-bottom: 25px;
+                    display: block;
+                }
             </style>
         </head>
         <body>
-            <div class="title">${post.title}</div>
+            ${post.mainImage ? `
+                <img src="${post.mainImage}" alt="Main Image" class="main-image">
+            ` : ''}
             ${post.gridImages && post.gridImages.length > 0 ? `
                 <table cellspacing="10" cellpadding="0" border="0" style="width: 100%; max-width: 600px; margin-bottom: 25px;">
                     ${createImageRows(post.gridImages).map(row => `
@@ -113,11 +122,6 @@ const createEmailTemplate = (post) => {
                 </table>
             ` : ''}
             <div class="content">
-                ${post.image ? `
-                    <div class="image-container">
-                        <img src="${post.image}" alt="Post Image" class="image">
-                    </div>
-                ` : ''}
                 ${post.video ? `
                     <a href="${post.video}" target="_blank" class="video-link">Click here to watch the video version!</a>
                 ` : ''}

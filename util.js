@@ -146,7 +146,7 @@ module.exports.formatResponse = (latestPost) => {
     // Create array of grid images from individual fields
     const gridImages = [];
     for (let i = 1; i <= 6; i++) {
-        const imageField = `image_${i}`;
+        const imageField = `gridImage${i}`;
         if (latestPost[imageField]) {
             gridImages.push(buildImageUrl(latestPost[imageField]));
         }
@@ -156,7 +156,7 @@ module.exports.formatResponse = (latestPost) => {
         title: latestPost.title,
         slug: latestPost.slug,
         publishedAt: latestPost.publishedAt,
-        image: latestPost.image ? buildImageUrl(latestPost.image) : null,
+        mainImage: latestPost.mainImage ? buildImageUrl(latestPost.mainImage) : null,
         video: latestPost.video ? buildVideoUrl(latestPost.video) : null,
         body: processBodyContent(latestPost.body),
         gridImages: gridImages

@@ -26,6 +26,16 @@ const getRecipients = async (sanityClient) => {
     }
 };
 
+const getTestRecipients = async (sanityClient) => {
+    const query = `*[_type == "testRecipient"]{
+        email,
+        name,
+        _id
+    }`;
+    const recipients = await sanityClient.fetch(query);
+    return recipients;
+};
+
 const processBodyContent = (blocks) => {
     let htmlContent = '';
     let isInList = false;
@@ -164,3 +174,4 @@ module.exports.formatResponse = (latestPost) => {
 };
 
 module.exports.getRecipients = getRecipients;
+module.exports.getTestRecipients = getTestRecipients;

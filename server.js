@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const { createClient } = require('@sanity/client');
-const { formatResponse, getRecipients } = require('./util');
+const { formatResponse, getRecipients, getTestRecipients } = require('./util');
 const { sendEmails } = require('./emailService');
 const app = express();
 const port = process.env.PORT || 3000;
@@ -13,6 +13,56 @@ const sanityClient = createClient({
   token: process.env.SANITY_TOKEN, 
   apiVersion: '2023-03-20',
   useCdn: false
+});
+
+app.get('/sendEmailUpdateTest', async (req, res) => {
+  try {
+    // Updated query to use individual image fields
+    const query = `*[_type == "testPost"] | order(_createdAt desc)[0]{
+      title,
+      slug,
+      publishedAt,
+      mainImage,
+      video,
+      body,
+      gridImage1,
+      gridImage2,
+      gridImage3,
+      gridImage4,
+      gridImage5,
+      gridImage6
+    }`;
+
+    const [latestPost, recipients] = await Promise.all([
+      sanityClient.fetch(query),
+      getTestRecipients(sanityClient)
+    ]);
+
+    // Handle cases where no post or recipients
+    if (!latestPost) {
+      return res.status(404).send('No post found');
+    }
+
+    if (!recipients || recipients.length === 0) {
+      return res.status(404).send('No recipients found');
+    }
+
+    const formattedPost = formatResponse(latestPost);
+
+    // Send emails to all recipients
+    await sendEmails(formattedPost, recipients);
+
+    res.status(200).json({
+      message: 'Successfully sent email updates to all recipients',
+      data: {
+        post: formattedPost,
+        recipientCount: recipients.length
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error processing email updates');
+  }
 });
 
 // Simple route: GET /sendEmailUpdate

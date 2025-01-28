@@ -17,7 +17,7 @@ const sanityClient = createClient({
 
 app.get('/sendEmailUpdateTest', async (req, res) => {
   try {
-    // Updated query to use individual image fields
+    // Original query and rest of the code
     const query = `*[_type == "testPost"] | order(_createdAt desc)[0]{
       title,
       slug,

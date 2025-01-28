@@ -1,6 +1,8 @@
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+const SIGNATURE_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/1527b7e7560c63ddbe93a770cb12b86197d57cac-1867x587.png`;
+
 const createEmailTemplate = (post) => {
     // Create rows of 3 images each
     const createImageRows = (images) => {
@@ -101,6 +103,16 @@ const createEmailTemplate = (post) => {
                     margin-bottom: 25px;
                     display: block;
                 }
+                .signature {
+                    margin-top: 30px;
+                    border-top: 1px solid #eee;
+                    padding-top: 20px;
+                }
+                .signature img {
+                    width: 200px;
+                    height: auto;
+                    display: block;
+                }
             </style>
         </head>
         <body>
@@ -128,6 +140,9 @@ const createEmailTemplate = (post) => {
                 <div class="body-text">
                     ${post.body}
                 </div>
+            </div>
+            <div class="signature">
+                <img src="${SIGNATURE_URL}" alt="Signature" style="width: 200px; height: auto; display: block;" />
             </div>
         </body>
         </html>

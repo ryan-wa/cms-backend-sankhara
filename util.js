@@ -1,3 +1,8 @@
+const QRCode = require('qrcode');
+const { getS3Client } = require('./aws');
+const { googleOAuthClient } = require('./gcloud');
+const { google } = require('googleapis');
+
 const buildImageUrl = (imageRef) => {
     const imgInfoSplit = imageRef.asset._ref.split('-');
     const imgInfo = imgInfoSplit[1] + '-' + imgInfoSplit[2] + '.' + imgInfoSplit[3];
@@ -10,13 +15,13 @@ const buildVideoUrl = (videoRef) => {
     return `https://cdn.sanity.io/files/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/${videoInfo}`;
 };
 
-const getRecipients = async (sanityClient) => {
+module.exports.getRecipients = async (sanityClient) => {
     const query = `*[_type == "recipient"]{
         email,
         name,
         _id
     }`;
-    
+
     try {
         const recipients = await sanityClient.fetch(query);
         return recipients;
@@ -26,7 +31,7 @@ const getRecipients = async (sanityClient) => {
     }
 };
 
-const getTestRecipients = async (sanityClient) => {
+module.exports.getTestRecipients = async (sanityClient) => {
     const query = `*[_type == "testRecipient"]{
         email,
         name,
@@ -62,7 +67,7 @@ const processBodyContent = (blocks) => {
 
     const processMarks = (text, marks, markDefs) => {
         let processedText = text;
-        
+
         if (marks) {
             if (marks.includes('strong')) {
                 processedText = `<strong>${processedText}</strong>`;
@@ -73,14 +78,14 @@ const processBodyContent = (blocks) => {
             if (marks.includes('strike-through')) {
                 processedText = `<del>${processedText}</del>`;
             }
-            
+
             // Handle links
             const linkMark = markDefs?.find(def => marks.includes(def._key));
             if (linkMark) {
                 processedText = `<a href="${linkMark.href}" style="color: #007BFF; text-decoration: none; border-bottom: 1px solid #007BFF; padding-bottom: 1px;">${processedText}</a>`;
             }
         }
-        
+
         return processedText;
     };
 
@@ -173,5 +178,92 @@ module.exports.formatResponse = (latestPost) => {
     };
 };
 
-module.exports.getRecipients = getRecipients;
-module.exports.getTestRecipients = getTestRecipients;
+const storeQRCode = async (error, url, assetName) => {
+    const s3 = getS3Client();
+    const base64QRData = url.replace(/^data:image\/\w+;base64,/, "");
+    const contentType = url.split(';')[0].split(':')[1];
+    const params = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: `${assetName.replaceAll(' ', '-').replaceAll('.', '').replaceAll('/', '-').replaceAll(`'`, '').replaceAll(`"`, '').replaceAll(`\\`, '-')}/${Date.now()}`,
+        Body: Buffer.from(base64QRData, 'base64'),
+        ContentType: contentType
+    };
+
+    s3.putObject(params, (err, data) => {
+        if (err) {
+            console.error(err);
+            throw err;
+        } else {
+            console.log(`QR Code data stored: ${JSON.stringify(data)}`);
+            return data;
+        }
+    });
+
+    if (error) {
+        console.error(error);
+        throw error;
+    }
+    return true;
+};
+
+module.exports.generateQRCode = async (url, assetName, options = { lightColor: '#FFFFFF', darkColor: '#000000', width: 500, height: 500 }) => {
+    try {
+        const result = await QRCode.toDataURL(
+            url,
+            {
+                width: options.width,
+                height: options.height,
+                color: {
+                    dark: options.darkColor,
+                    light: options.lightColor
+                },
+                margin: 2,
+            },
+            (error, url) => {
+                if (error) {
+                    console.error(error);
+                    throw error;
+                }
+                storeQRCode(null, url, assetName);
+            }
+        );
+        return result;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+};
+
+module.exports.generateAllQRCodes = async (folders) => {
+    console.log(`Generating ${folders.length} QR codes`);
+    let i = 1;
+    for (const folder of folders) {
+        const qrCode = await this.generateQRCode(folder.link, folder.name);
+        console.log(`${i} of ${folders.length} QR codes generated`);
+        i++;
+    }
+    console.log(`Generated ${i} QR codes`);
+};
+
+module.exports.getGDriveFolders = async (tokenCode) => {
+    let folders = [];
+    const { tokens } = await googleOAuthClient.getToken(tokenCode);
+    googleOAuthClient.setCredentials(tokens);
+    const drive = google.drive({ version: 'v3', auth: googleOAuthClient });
+    try {
+        const parentFolderId = '1vrI3P6KKFGjti6nb2FpTaguYYY5-ie1y'; // Replace with your folder ID.
+        const response = await drive.files.list({
+            q: `'${parentFolderId}' in parents and mimeType = 'application/vnd.google-apps.folder'`,
+            fields: 'files(id, name, webViewLink)',
+            includeItemsFromAllDrives: true,
+            supportsAllDrives: true,
+        });
+        response.data.files.forEach(folder => {
+            folders.push({ name: folder.name, id: folder.id, link: folder.webViewLink });
+        });
+        return folders;
+    } catch (error) {
+        console.error('Error listing subfolders:', error);
+        throw error;
+    }
+};

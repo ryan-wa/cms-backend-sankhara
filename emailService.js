@@ -42,8 +42,7 @@ const createEmailTemplate = (post) => {
                     text-align: center;
                 }
                 .logo {
-                    width: 100%;
-                    max-width: 200px;
+                    width: 200px;  /* Fixed width */
                     height: auto;
                     display: block;
                 }
@@ -115,8 +114,10 @@ const createEmailTemplate = (post) => {
                         grid-template-columns: repeat(2, 1fr);
                     }
                     
-                    .grid-image {
-                        height: 140px;
+                    td img[alt="Grid Image"] {
+                        width: 140px !important;  /* Make width equal to height */
+                        height: 140px !important;
+                        object-fit: cover !important;
                     }
                 }
                 .main-image {
@@ -161,7 +162,9 @@ const createEmailTemplate = (post) => {
                                                 <tr>
                                                     ${row.map(imgUrl => `
                                                         <td style="width: 33.33%; padding: 5px;">
-                                                            <img src="${imgUrl}" alt="Grid Image" style="width: 100%; height: 180px; object-fit: cover; display: block;">
+                                                            <img src="${imgUrl}" 
+                                                                 alt="Grid Image" 
+                                                                 style="width: 180px; height: 180px; object-fit: cover; display: block;">
                                                         </td>
                                                     `).join('')}
                                                     ${row.length < 3 ? `<td colspan="${3 - row.length}" style="width: ${(3 - row.length) * 33.33}%;"></td>` : ''}

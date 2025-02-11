@@ -156,6 +156,14 @@ app.get('/finishQRGeneration', async (req, res) => {
   }
 });
 
+app.get('/getLatestFileInfo', async (req, res) => {
+  const query = `*[_type == "companyFiles"] | order(_createdAt desc)[0]{
+    ...
+  }`;
+  const latestFileInfo = await sanityClient.fetch(query);
+  res.status(200).json({ latestFileInfo });
+});
+
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });

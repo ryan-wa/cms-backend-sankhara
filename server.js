@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const { createClient } = require('@sanity/client');
-const { formatResponse, getRecipients, getTestRecipients, generateQRCode, getGDriveFolders, generateAllQRCodes } = require('./util');
+const { formatResponse, getRecipients, getTestRecipients, generateQRCode, getGDriveFolders, generateAllQRCodes, getAuthenticatedDrive } = require('./util');
 const { sendEmails } = require('./emailService');
 const { googleOAuthClient, GAPI_SCOPES } = require('./gcloud');
 const app = express();
@@ -147,9 +147,10 @@ app.get('/generateAllQRs', async (req, res) => {
 app.get('/finishQRGeneration', async (req, res) => {
   try {
     const { code } = req.query;
+    const drive = await getAuthenticatedDrive(code);
+    const folders = await getGDriveFolders(drive);
+    await generateAllQRCodes(folders, drive);
     res.send('Authentication successful! Check your console for folder details.');
-    const folders = await getGDriveFolders(code);
-    await generateAllQRCodes(folders);
   } catch (error) {
     res.status(500).send('Authentication failed');
     console.error('Error retrieving access token', error);

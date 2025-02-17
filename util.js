@@ -2,6 +2,7 @@ const QRCode = require('qrcode');
 const { getS3Client } = require('./aws');
 const { googleOAuthClient } = require('./gcloud');
 const { google } = require('googleapis');
+const streamifier = require('streamifier');
 
 const buildImageUrl = (imageRef) => {
     const imgInfoSplit = imageRef.asset._ref.split('-');
@@ -234,22 +235,69 @@ module.exports.generateQRCode = async (url, assetName, options = { lightColor: '
     }
 };
 
-module.exports.generateAllQRCodes = async (folders) => {
-    console.log(`Generating ${folders.length} QR codes`);
-    let i = 1;
-    for (const folder of folders) {
-        const qrCode = await this.generateQRCode(folder.link, folder.name);
-        console.log(`${i} of ${folders.length} QR codes generated`);
-        i++;
+// Function to upload a file to Google Drive
+const uploadFileToDrive = async (drive, folderId, fileName, fileData) => {
+    try {
+        console.log(`Folder ID: ${folderId}`);
+        const fileMetadata = {
+            name: fileName,
+            parents: [folderId]
+        };
+        const media = {
+            mimeType: 'image/png',
+            body: streamifier.createReadStream(Buffer.from(fileData, 'base64'))
+        };
+        const response = await drive.files.create({
+            resource: fileMetadata,
+            media: media,
+            fields: 'id, webViewLink',
+            supportsAllDrives: true,
+        });
+        console.log(`File uploaded to Google Drive with ID: ${response.data.id}`);
+    } catch (error) {
+        console.error('Error uploading file to Google Drive:', error);
+        throw error;
     }
-    console.log(`Generated ${i} QR codes`);
 };
 
-module.exports.getGDriveFolders = async (tokenCode) => {
-    let folders = [];
+module.exports.generateAllQRCodes = async (folders, drive) => {
+    let i = 1;
+    for (const folder of folders) {
+        try {
+            const qrCodeDataUrl = await QRCode.toDataURL(folder.link, {
+                width: 500,
+                height: 500,
+                color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                },
+                margin: 2
+            });
+
+            // Extract base64 data from the Data URL
+            const base64Data = qrCodeDataUrl.replace(/^data:image\/png;base64,/, '');
+
+            // Upload the QR code as a PNG to the Google Drive folder
+            await uploadFileToDrive(drive, folder.id, `${folder.name}_QR.png`, base64Data);
+
+            console.log(`${i} of ${folders.length} QR codes generated and uploaded`);
+            i++;
+        } catch (error) {
+            console.error(`Error generating or uploading QR code for folder ${folder.name}:`, error);
+        }
+    }
+    console.log(`Generated and uploaded ${i - 1} QR codes`);
+};
+
+module.exports.getAuthenticatedDrive = async (tokenCode) => {
     const { tokens } = await googleOAuthClient.getToken(tokenCode);
     googleOAuthClient.setCredentials(tokens);
     const drive = google.drive({ version: 'v3', auth: googleOAuthClient });
+    return drive;
+};
+
+module.exports.getGDriveFolders = async (drive) => {
+    let folders = [];
     try {
         const parentFolderId = '1vrI3P6KKFGjti6nb2FpTaguYYY5-ie1y'; // Replace with your folder ID.
         const response = await drive.files.list({

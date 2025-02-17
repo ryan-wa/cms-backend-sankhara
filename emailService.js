@@ -2,12 +2,11 @@ const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const SIGNATURE_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/1527b7e7560c63ddbe93a770cb12b86197d57cac-1867x587.png`;
-const LOGO_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/471507777f22f5c78dbe14192d73402d36cac3eb-803x265.png`;
+const LOGO_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/156e990cc2bc008214139dacf98b22273b59d279-1224x397.png`;
 const BACKGROUND_COLOR = '#B0BBBB';
 
 const createEmailTemplate = (post) => {
     const MAX_IMAGE_WIDTH = 600;  // Maximum width for any image
-    const MAX_IMAGE_HEIGHT = 400; // Maximum height for any image
 
     const createImageRows = (images) => {
         const rows = [];
@@ -62,38 +61,6 @@ const createEmailTemplate = (post) => {
                     margin-bottom: 30px;
                     text-align: left;
                 }
-                .image-container {
-                    display: block;
-                    width: 100%;
-                    max-width: 600px;
-                    margin: 0 0 10px;
-                }
-                .image {
-                    width: 100%;
-                    height: auto;
-                    display: block;
-                    margin: 0;
-                }
-                .video-link {
-                    display: inline-block;
-                    margin-top: 10px;
-                    margin-bottom: 20px;
-                    font-size: 16px;
-                    color: #007BFF;
-                    text-decoration: none;
-                }
-                .video-link:hover {
-                    text-decoration: underline;
-                }
-                .body-text {
-                    margin-bottom: 30px;
-                    text-align: left;
-                }
-                .footer {
-                    text-align: left;
-                    font-size: 12px;
-                    color: #666;
-                }
                 .grid-container {
                     display: grid;
                     grid-template-columns: repeat(3, 1fr);
@@ -120,14 +87,6 @@ const createEmailTemplate = (post) => {
                         object-fit: cover !important;
                     }
                 }
-                .main-image {
-                    width: 100%;
-                    max-width: ${MAX_IMAGE_WIDTH}px;
-                    max-height: ${MAX_IMAGE_HEIGHT}px;
-                    object-fit: contain;
-                    margin-bottom: 25px;
-                    display: block;
-                }
                 .signature {
                     margin-top: 30px;
                     border-top: 1px solid #000;
@@ -151,11 +110,6 @@ const createEmailTemplate = (post) => {
                                         <img src="${LOGO_URL}" alt="Logo" class="logo">
                                     </div>
                                     <div class="divider"></div>
-                                    ${post.mainImage ? `
-                                        <div style="text-align: center; max-height: ${MAX_IMAGE_HEIGHT}px; overflow: hidden;">
-                                            <img src="${post.mainImage}" alt="Main Image" class="main-image">
-                                        </div>
-                                    ` : ''}
                                     ${post.gridImages && post.gridImages.length > 0 ? `
                                         <table cellspacing="10" cellpadding="0" border="0" style="width: 100%; max-width: ${MAX_IMAGE_WIDTH}px; margin-bottom: 25px;">
                                             ${createImageRows(post.gridImages).map(row => `

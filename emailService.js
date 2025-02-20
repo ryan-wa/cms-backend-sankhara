@@ -3,7 +3,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const SIGNATURE_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/1527b7e7560c63ddbe93a770cb12b86197d57cac-1867x587.png`;
 const LOGO_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/156e990cc2bc008214139dacf98b22273b59d279-1224x397.png`;
-const BACKGROUND_COLOR = '#B0BBBB';
+const BACKGROUND_COLOR = '#F7F7F7';
 
 const createEmailTemplate = (post) => {
     const MAX_IMAGE_WIDTH = 600;  // Maximum width for any image
@@ -124,9 +124,6 @@ const createEmailTemplate = (post) => {
                                         </table>
                                     ` : ''}
                                     <div class="content">
-                                        ${post.video ? `
-                                            <a href="${post.video}" target="_blank" class="video-link">Click here to watch the video version!</a>
-                                        ` : ''}
                                         <div class="body-text">
                                             ${post.body}
                                         </div>

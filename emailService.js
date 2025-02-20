@@ -1,9 +1,28 @@
 const sgMail = require('@sendgrid/mail');
+const sharp = require('sharp');
+const fetch = require('node-fetch');
+const fs = require('fs');
+const path = require('path');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const SIGNATURE_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/1527b7e7560c63ddbe93a770cb12b86197d57cac-1867x587.png`;
 const LOGO_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/156e990cc2bc008214139dacf98b22273b59d279-1224x397.png`;
+const PLAY_BUTTON_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/6beea343585e8c175f8dffeb233849b6dbc29618-600x600.png`;
+
 const BACKGROUND_COLOR = '#B0BBBB';
+
+const createMergedImage = async (topImageUrl, bottomImageUrl) => {
+    const bottomBuffer = await fetch(bottomImageUrl).then(res => res.buffer());
+    const topBuffer = await fetch(topImageUrl).then(res => res.buffer());
+
+    const outputPath = path.join(__dirname, 'merged.png');
+
+    await sharp(bottomBuffer)
+        .composite([{ input: topBuffer, gravity: 'center' }])
+        .toFile(outputPath);
+
+    return outputPath;
+};
 
 const createEmailTemplate = (post) => {
     const MAX_IMAGE_WIDTH = 600;  // Maximum width for any image
@@ -94,6 +113,18 @@ const createEmailTemplate = (post) => {
                     height: auto;
                     display: block;
                 }
+                .main-image-container {
+                    position: relative;
+                    width: 100%;
+                    max-width: ${MAX_IMAGE_WIDTH}px;
+                    margin-bottom: 25px;
+                }
+                .main-image {
+                    width: 100%;
+                    max-width: ${MAX_IMAGE_WIDTH}px;
+                    height: auto;
+                    display: block;
+                }
             </style>
         </head>
         <body style="margin: 0; padding: 0;">
@@ -107,6 +138,11 @@ const createEmailTemplate = (post) => {
                                         <img src="${LOGO_URL}" alt="Logo" class="logo">
                                     </div>
                                     <div class="divider"></div>
+                                    ${post.mainImage ? `
+                                        <a href="${post.video || '#'}" target="_blank" class="main-image-container">
+                                            <img src="cid:mergedImage" alt="Main Image" style="width: 100%; max-width: 600px; height: auto;">
+                                        </a>
+                                    ` : ''}
                                     ${post.gridImages && post.gridImages.length > 0 ? `
                                         <table cellspacing="10" cellpadding="0" border="0" style="width: 100%; max-width: ${MAX_IMAGE_WIDTH}px; margin-bottom: 25px;">
                                             ${createImageRows(post.gridImages).map(row => `
@@ -147,6 +183,7 @@ const createEmailTemplate = (post) => {
 
 const sendEmails = async (post, recipients, senderEmail = process.env.SENDGRID_FROM_EMAIL, senderName = process.env.SENDGRID_FROM_NAME) => {
     try {
+        const mergedImagePath = await createMergedImage(PLAY_BUTTON_URL, post.mainImage);
         const emailTemplate = createEmailTemplate(post);
 
         const personalizations = recipients.map(recipient => ({
@@ -161,10 +198,23 @@ const sendEmails = async (post, recipients, senderEmail = process.env.SENDGRID_F
             },
             subject: `${post.title}`,
             html: emailTemplate,
+            attachments: [
+                {
+                    content: fs.readFileSync(mergedImagePath).toString('base64'),
+                    filename: 'merged.png',
+                    type: 'image/png',
+                    disposition: 'attachment',
+                    content_id: 'mergedImage'
+                }
+            ]
         };
 
         const response = await sgMail.send(msg);
         console.log('Emails sent successfully');
+
+        // Clean up the temporary file
+        fs.unlinkSync(mergedImagePath);
+
         return response;
     } catch (error) {
         console.error('Error sending emails:', error);

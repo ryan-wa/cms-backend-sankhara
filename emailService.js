@@ -3,6 +3,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const SIGNATURE_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/1527b7e7560c63ddbe93a770cb12b86197d57cac-1867x587.png`;
 const LOGO_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/156e990cc2bc008214139dacf98b22273b59d279-1224x397.png`;
+const DARK_LOGO_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/9fbc65490df485a1a20375b9aee2d02b5d93f6b7-878x209.png`;
 const BACKGROUND_COLOR = '#F7F7F7';
 
 const createEmailTemplate = (post) => {
@@ -104,7 +105,7 @@ const createEmailTemplate = (post) => {
                             <tr>
                                 <td>
                                     <div class="logo-container">
-                                        <img src="${LOGO_URL}" alt="Logo" class="logo">
+                                        <img src="${DARK_LOGO_URL}" alt="Logo" class="logo">
                                     </div>
                                     <div class="divider"></div>
                                     ${post.gridImages && post.gridImages.length > 0 ? `

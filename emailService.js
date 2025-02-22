@@ -8,7 +8,8 @@ const SIGNATURE_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT
 const LOGO_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/156e990cc2bc008214139dacf98b22273b59d279-1224x397.png`;
 const PLAY_BUTTON_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/6beea343585e8c175f8dffeb233849b6dbc29618-600x600.png`;
 
-const BACKGROUND_COLOR = '#B0BBBB';
+const DARK_LOGO_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/9fbc65490df485a1a20375b9aee2d02b5d93f6b7-878x209.png`;
+const BACKGROUND_COLOR = '#F7F7F7';
 
 const createEmailTemplate = (post, videoThumbnailUrl) => {
     const MAX_IMAGE_WIDTH = 600;  // Maximum width for any image
@@ -121,7 +122,7 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
                             <tr>
                                 <td>
                                     <div class="logo-container">
-                                        <img src="${LOGO_URL}" alt="Logo" class="logo">
+                                        <img src="${DARK_LOGO_URL}" alt="Logo" class="logo">
                                     </div>
                                     <div class="divider"></div>
                                     ${videoThumbnailUrl ? `
@@ -146,9 +147,6 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
                                         </table>
                                     ` : ''}
                                     <div class="content">
-                                        ${post.video ? `
-                                            <a href="${post.video}" target="_blank" class="video-link">Click here to watch the video version!</a>
-                                        ` : ''}
                                         <div class="body-text">
                                             ${post.body}
                                         </div>

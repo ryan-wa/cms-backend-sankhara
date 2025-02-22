@@ -2,6 +2,19 @@ const QRCode = require('qrcode');
 const { getS3Client } = require('./aws');
 const { googleOAuthClient } = require('./gcloud');
 const { google } = require('googleapis');
+const AWS = require('aws-sdk');
+const sharp = require('sharp');
+const fetch = require('node-fetch');
+
+// Configure AWS credentials
+AWS.config.update({
+    region: process.env.S3_REGION,
+    accessKeyId: process.env.S3_ACCESS_KEY,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY
+});
+
+// Create an S3 client
+const s3 = new AWS.S3();
 
 const buildImageUrl = (imageRef) => {
     const imgInfoSplit = imageRef.asset._ref.split('-');
@@ -266,4 +279,34 @@ module.exports.getGDriveFolders = async (tokenCode) => {
         console.error('Error listing subfolders:', error);
         throw error;
     }
+};
+
+module.exports.createMergedImage = async (topImageUrl, bottomImageUrl) => {
+    const bottomBuffer = await fetch(bottomImageUrl).then(res => res.buffer());
+    const topBuffer = await fetch(topImageUrl).then(res => res.buffer());
+
+    // Create the merged image buffer
+    const mergedBuffer = await sharp(bottomBuffer)
+        .composite([{ input: topBuffer, gravity: 'center' }])
+        .toBuffer();
+
+    // Convert the buffer to base64
+    const base64Image = mergedBuffer.toString('base64');
+
+    // Define the S3 upload parameters
+    const params = {
+        Bucket: process.env.S3_THUMBNAIL_BUCKET_NAME,
+        Key: `merged-images/${Date.now()}.png`, // Unique key for each image
+        Body: Buffer.from(base64Image, 'base64'),
+        ContentType: 'image/png',
+        // ACL: 'public-read' // Make the file publicly readable
+    };
+
+    // Upload the image to S3
+    await s3.putObject(params).promise();
+
+    // Construct the public URL
+    const publicUrl = `https://${params.Bucket}.s3.${process.env.S3_REGION}.amazonaws.com/${params.Key}`;
+
+    return publicUrl;
 };

@@ -175,7 +175,6 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
 const sendEmails = async (post, recipients, senderEmail = process.env.SENDGRID_FROM_EMAIL, senderName = process.env.SENDGRID_FROM_NAME) => {
     try {
         const mergedImageUrl = await createMergedImage(PLAY_BUTTON_URL, post.videoThumbnail);
-        console.log(mergedImageUrl);
         const emailTemplate = createEmailTemplate(post, mergedImageUrl);
 
         const personalizations = recipients.map(recipient => ({

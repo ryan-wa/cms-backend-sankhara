@@ -12,12 +12,13 @@ const DARK_LOGO_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT
 const BACKGROUND_COLOR = '#F7F7F7';
 
 const createEmailTemplate = (post, videoThumbnailUrl) => {
-    const MAX_IMAGE_WIDTH = 600;  // Maximum width for any image
+    const MAX_IMAGE_DIMENSION = 500;  // Maximum dimension for width or height
+    const MAX_GRID_IMAGE_DIMENSION = 300;
 
     const createImageRows = (images) => {
         const rows = [];
-        for (let i = 0; i < Math.min(images.length, 6); i += 3) {
-            const row = images.slice(i, i + 3);
+        for (let i = 0; i < Math.min(images.length, 6); i += 2) {
+            const row = images.slice(i, i + 2);
             rows.push(row);
         }
         return rows;
@@ -69,10 +70,12 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
                 }
                 .grid-container {
                     display: grid;
-                    grid-template-columns: repeat(3, 1fr);
+                    grid-template-columns: repeat(2, 1fr);
                     gap: 10px;
                     margin-bottom: 25px;
                     max-width: 600px;
+                    margin-left: auto;
+                    margin-right: auto;
                 }
                 .grid-image {
                     width: 100%;
@@ -103,14 +106,18 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
                 .main-image-container {
                     position: relative;
                     width: 100%;
-                    max-width: ${MAX_IMAGE_WIDTH}px;
-                    margin-bottom: 25px;
+                    max-width: ${MAX_IMAGE_DIMENSION}px;
+                    margin: 0 auto 25px auto;
+                    text-align: center;
                 }
                 .main-image {
-                    width: 100%;
-                    max-width: ${MAX_IMAGE_WIDTH}px;
+                    max-width: 100%;
+                    max-height: ${MAX_IMAGE_DIMENSION}px;
+                    width: auto;
                     height: auto;
                     display: block;
+                    margin-left: auto;
+                    margin-right: auto;
                 }
             </style>
         </head>
@@ -118,7 +125,7 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: ${BACKGROUND_COLOR};">
                 <tr>
                     <td align="center" style="padding: 20px;">
-                        <table width="${MAX_IMAGE_WIDTH}" cellpadding="0" cellspacing="0" border="0" style="background-color: ${BACKGROUND_COLOR};">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: ${BACKGROUND_COLOR};">
                             <tr>
                                 <td>
                                     <div class="logo-container">
@@ -131,17 +138,17 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
                                         </a>
                                     ` : ''}
                                     ${post.gridImages && post.gridImages.length > 0 ? `
-                                        <table cellspacing="10" cellpadding="0" border="0" style="width: 100%; max-width: ${MAX_IMAGE_WIDTH}px; margin-bottom: 25px;">
+                                        <table cellspacing="10" cellpadding="0" border="0" class="grid-container" style="max-width: ${MAX_IMAGE_DIMENSION}px; margin-bottom: 25px;">
                                             ${createImageRows(post.gridImages).map(row => `
                                                 <tr>
                                                     ${row.map(imgUrl => `
-                                                        <td style="width: 33.33%; padding: 5px;">
+                                                        <td style="width: 50%; padding: 5px;">
                                                             <img src="${imgUrl}" 
                                                                  alt="Grid Image" 
-                                                                 style="width: 180px; height: 180px; object-fit: cover; display: block;">
+                                                                 style="width: 240px; height: 240px; object-fit: cover; display: block; margin: 0 auto;">
                                                         </td>
                                                     `).join('')}
-                                                    ${row.length < 3 ? `<td colspan="${3 - row.length}" style="width: ${(3 - row.length) * 33.33}%;"></td>` : ''}
+                                                    ${row.length < 2 ? `<td colspan="${2 - row.length}" style="width: ${(2 - row.length) * 50}%;"></td>` : ''}
                                                 </tr>
                                             `).join('')}
                                         </table>

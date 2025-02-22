@@ -184,7 +184,7 @@ module.exports.formatResponse = (latestPost) => {
         title: latestPost.title,
         slug: latestPost.slug,
         publishedAt: latestPost.publishedAt,
-        mainImage: latestPost.mainImage ? buildImageUrl(latestPost.mainImage) : null,
+        videoThumbnail: latestPost.videoThumbnail ? buildImageUrl(latestPost.videoThumbnail) : null,
         video: latestPost.video ? buildVideoUrl(latestPost.video) : null,
         body: processBodyContent(latestPost.body),
         gridImages: gridImages

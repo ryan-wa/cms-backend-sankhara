@@ -19,8 +19,8 @@ const sanityClient = createClient({
 
 app.get('/sendEmailUpdateTest', async (req, res) => {
   try {
-    // Original query and rest of the code
-    const query = `*[_type == "testPost"] | order(_createdAt desc)[0]{
+    // Updated query to order by publishedAt
+    const query = `*[_type == "testPost"] | order(publishedAt desc)[0]{
       title,
       slug,
       publishedAt,
@@ -82,7 +82,7 @@ app.get('/sendEmailUpdateTest', async (req, res) => {
 app.get('/sendEmailUpdate', async (req, res) => {
   try {
     // Updated query to use individual image fields
-    const query = `*[_type == "post"] | order(_createdAt desc)[0]{
+    const query = `*[_type == "post"] | order(publishedAt desc)[0]{
       title,
       slug,
       publishedAt,

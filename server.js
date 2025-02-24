@@ -127,7 +127,8 @@ app.get('/sendEmailUpdate', async (req, res) => {
       }
     } else {
       if (formattedPost.title == 'Sankhara - 006 (24 Feb, 2025)') {
-        // await sendEmails(formattedPost, recipients);
+        console.log('Sending to all recipients');
+        await sendEmails(formattedPost, recipients);
       }
     }
 

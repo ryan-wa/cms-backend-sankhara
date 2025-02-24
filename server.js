@@ -122,10 +122,13 @@ app.get('/sendEmailUpdate', async (req, res) => {
         name: 'Pankaj'
       });
       // Send test emails
-      await sendEmails(formattedPost, testRecipients);
+      if (formattedPost.title == 'Sankhara - 006 (24 Feb, 2025)') {
+        await sendEmails(formattedPost, testRecipients);
+      }
     } else {
-      // Send emails to all recipients
-      await sendEmails(formattedPost, recipients);
+      if (formattedPost.title == 'Sankhara - 006 (24 Feb, 2025)') {
+        await sendEmails(formattedPost, recipients);
+      }
     }
 
     res.status(200).json({

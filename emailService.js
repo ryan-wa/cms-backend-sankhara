@@ -138,7 +138,7 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
                                         </a>
                                     ` : ''}
                                     ${post.gridImages && post.gridImages.length > 0 ? `
-                                        <table cellspacing="10" cellpadding="0" border="0" class="grid-container" style="max-width: ${MAX_IMAGE_DIMENSION}px; margin-bottom: 25px;">
+                                        <table cellspacing="10" cellpadding="0" border="0" class="grid-container" style="max-width: ${MAX_IMAGE_DIMENSION}px; margin: 0 auto 25px auto;">
                                             ${createImageRows(post.gridImages).map(row => `
                                                 <tr>
                                                     ${row.map(imgUrl => `
@@ -176,7 +176,6 @@ const sendEmails = async (post, recipients, senderEmail = process.env.SENDGRID_F
     try {
         const mergedImageUrl = await createMergedImage(PLAY_BUTTON_URL, post.videoThumbnail);
         const emailTemplate = createEmailTemplate(post, mergedImageUrl);
-
         const personalizations = recipients.map(recipient => ({
             to: { email: recipient.email, name: recipient.name }
         }));

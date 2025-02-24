@@ -114,9 +114,9 @@ app.get('/sendEmailUpdate', async (req, res) => {
     }
 
     const formattedPost = formatResponse(latestPost);
-
+    let testRecipients = [];
     if (formattedPost.isTest) {
-      let testRecipients = await getTestRecipients(sanityClient);
+      testRecipients = await getTestRecipients(sanityClient);
       testRecipients.push({
         email: 'pankaj@sankhara.com',
         name: 'Pankaj'
@@ -127,7 +127,7 @@ app.get('/sendEmailUpdate', async (req, res) => {
       }
     } else {
       if (formattedPost.title == 'Sankhara - 006 (24 Feb, 2025)') {
-        await sendEmails(formattedPost, recipients);
+        // await sendEmails(formattedPost, recipients);
       }
     }
 
@@ -135,7 +135,7 @@ app.get('/sendEmailUpdate', async (req, res) => {
       message: 'Successfully sent email updates to all recipients',
       data: {
         post: formattedPost,
-        recipientCount: recipients.length
+        recipientCount: formattedPost.isTest ? testRecipients.length : recipients.length
       }
     });
   } catch (error) {

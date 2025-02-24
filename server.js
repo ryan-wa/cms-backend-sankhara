@@ -55,7 +55,7 @@ app.get('/sendEmailUpdateTest', async (req, res) => {
     if (formattedPost.isTest) {
       let testRecipients = await getTestRecipients(sanityClient);
       testRecipients.push({
-        email: 'ryan@fincehs.co',
+        email: 'ryan@finches.co',
         name: 'Ryan'
       });
       // Send test emails

@@ -187,7 +187,8 @@ module.exports.formatResponse = (latestPost) => {
         videoThumbnail: latestPost.videoThumbnail ? buildImageUrl(latestPost.videoThumbnail) : null,
         video: latestPost.video ? buildVideoUrl(latestPost.video) : null,
         body: processBodyContent(latestPost.body),
-        gridImages: gridImages
+        gridImages: gridImages,
+        isTest: latestPost.isTest
     };
 };
 

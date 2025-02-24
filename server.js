@@ -32,7 +32,8 @@ app.get('/sendEmailUpdateTest', async (req, res) => {
       gridImage3,
       gridImage4,
       gridImage5,
-      gridImage6
+      gridImage6,
+      isTest
     }`;
 
     const [latestPost, recipients] = await Promise.all([
@@ -51,8 +52,18 @@ app.get('/sendEmailUpdateTest', async (req, res) => {
 
     const formattedPost = formatResponse(latestPost);
 
-    // Send emails to all recipients
-    await sendEmails(formattedPost, recipients, 'ryan@sankhara.com', 'Ryan');
+    if (formattedPost.isTest) {
+      let testRecipients = await getTestRecipients(sanityClient);
+      testRecipients.push({
+        email: 'ryan@fincehs.co',
+        name: 'Ryan'
+      });
+      // Send test emails
+      await sendEmails(formattedPost, testRecipients);
+    } else {
+      // Send emails to all recipients
+      await sendEmails(formattedPost, recipients, 'ryan@sankhara.com', 'Ryan');
+    }
 
     res.status(200).json({
       message: 'Successfully sent email updates to all recipients',
@@ -83,8 +94,10 @@ app.get('/sendEmailUpdate', async (req, res) => {
       gridImage3,
       gridImage4,
       gridImage5,
-      gridImage6
+      gridImage6,
+      isTest
     }`;
+
 
     const [latestPost, recipients] = await Promise.all([
       sanityClient.fetch(query),
@@ -102,8 +115,18 @@ app.get('/sendEmailUpdate', async (req, res) => {
 
     const formattedPost = formatResponse(latestPost);
 
-    // Send emails to all recipients
-    await sendEmails(formattedPost, recipients);
+    if (formattedPost.isTest) {
+      let testRecipients = await getTestRecipients(sanityClient);
+      testRecipients.push({
+        email: 'pankaj@sankhara.com',
+        name: 'Pankaj'
+      });
+      // Send test emails
+      await sendEmails(formattedPost, testRecipients);
+    } else {
+      // Send emails to all recipients
+      await sendEmails(formattedPost, recipients);
+    }
 
     res.status(200).json({
       message: 'Successfully sent email updates to all recipients',

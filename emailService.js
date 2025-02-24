@@ -6,7 +6,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const SIGNATURE_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/1527b7e7560c63ddbe93a770cb12b86197d57cac-1867x587.png`;
 const LOGO_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/156e990cc2bc008214139dacf98b22273b59d279-1224x397.png`;
-const PLAY_BUTTON_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/6beea343585e8c175f8dffeb233849b6dbc29618-600x600.png`;
+const PLAY_BUTTON_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/2b7018d54e02db430121457411d4001892d8f0e5-400x400.png`;
 
 const DARK_LOGO_URL = `https://cdn.sanity.io/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/9fbc65490df485a1a20375b9aee2d02b5d93f6b7-878x209.png`;
 const BACKGROUND_COLOR = '#F7F7F7';

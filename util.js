@@ -79,7 +79,8 @@ const processBodyContent = (blocks) => {
     };
 
     const processMarks = (text, marks, markDefs) => {
-        let processedText = text;
+        // First, handle multiple consecutive line breaks by preserving each newline
+        let processedText = text.replace(/\n/g, '<br>\n');
 
         if (marks) {
             if (marks.includes('strong')) {
@@ -88,6 +89,9 @@ const processBodyContent = (blocks) => {
             if (marks.includes('em')) {
                 processedText = `<em>${processedText}</em>`;
             }
+            if (marks.includes('underline')) {
+                processedText = `<u>${processedText}</u>`;
+            }
             if (marks.includes('strike-through')) {
                 processedText = `<del>${processedText}</del>`;
             }
@@ -95,7 +99,7 @@ const processBodyContent = (blocks) => {
             // Handle links
             const linkMark = markDefs?.find(def => marks.includes(def._key));
             if (linkMark) {
-                processedText = `<a href="${linkMark.href}" style="color: #007BFF; text-decoration: none; border-bottom: 1px solid #007BFF; padding-bottom: 1px;">${processedText}</a>`;
+                processedText = `<a href="${linkMark.href}" style="color: #007BFF; text-decoration: none; border-bottom: 1px solid #007BFF; padding-bottom: 1px;" target="_blank">${processedText}</a>`;
             }
         }
 
@@ -136,28 +140,28 @@ const processBodyContent = (blocks) => {
         } else {
             switch (style) {
                 case 'h1':
-                    htmlContent += `<h1 style="font-size: 2em; margin-bottom: 0.5em;">${textContent}</h1>`;
+                    htmlContent += `<h1 style="font-size: 2em; margin-bottom: 0.5em; margin-top: 1em;">${textContent}</h1>`;
                     break;
                 case 'h2':
-                    htmlContent += `<h2 style="font-size: 1.8em; margin-bottom: 0.5em;">${textContent}</h2>`;
+                    htmlContent += `<h2 style="font-size: 1.8em; margin-bottom: 0.5em; margin-top: 1em;">${textContent}</h2>`;
                     break;
                 case 'h3':
-                    htmlContent += `<h3 style="font-size: 1.6em; margin-bottom: 0.5em;">${textContent}</h3>`;
+                    htmlContent += `<h3 style="font-size: 1.6em; margin-bottom: 0.5em; margin-top: 1em;">${textContent}</h3>`;
                     break;
                 case 'h4':
-                    htmlContent += `<h4 style="font-size: 1.4em; margin-bottom: 0.5em;">${textContent}</h4>`;
+                    htmlContent += `<h4 style="font-size: 1.4em; margin-bottom: 0.5em; margin-top: 1em;">${textContent}</h4>`;
                     break;
                 case 'h5':
-                    htmlContent += `<h5 style="font-size: 1.2em; margin-bottom: 0.5em;">${textContent}</h5>`;
+                    htmlContent += `<h5 style="font-size: 1.2em; margin-bottom: 0.5em; margin-top: 1em;">${textContent}</h5>`;
                     break;
                 case 'h6':
-                    htmlContent += `<h6 style="font-size: 1.1em; margin-bottom: 0.5em;">${textContent}</h6>`;
+                    htmlContent += `<h6 style="font-size: 1.1em; margin-bottom: 0.5em; margin-top: 1em;">${textContent}</h6>`;
                     break;
                 case 'blockquote':
                     htmlContent += `<blockquote style="margin: 1em 0; padding-left: 1em; border-left: 4px solid #ccc; color: #666;">${textContent}</blockquote>`;
                     break;
                 default:
-                    htmlContent += `<p style="margin-bottom: 15px;">${textContent}</p>`;
+                    htmlContent += `<p style="margin-bottom: 1em; margin-top: 1em; min-height: 1em;">${textContent}</p>`;
             }
         }
     });
@@ -189,6 +193,17 @@ module.exports.formatResponse = (latestPost) => {
         body: processBodyContent(latestPost.body),
         gridImages: gridImages,
         isTest: latestPost.isTest
+    };
+};
+
+module.exports.formatContentResponse = (contentDoc) => {
+    if (!contentDoc) return null;
+
+    return {
+        title: contentDoc.title,
+        slug: contentDoc.slug?.current || '',
+        publishedAt: contentDoc.publishedAt,
+        content: contentDoc.content || []
     };
 };
 
@@ -282,32 +297,70 @@ module.exports.getGDriveFolders = async (tokenCode) => {
     }
 };
 
-module.exports.createMergedImage = async (topImageUrl, bottomImageUrl) => {
-    const bottomBuffer = await fetch(bottomImageUrl).then(res => res.buffer());
-    const topBuffer = await fetch(topImageUrl).then(res => res.buffer());
+module.exports.createMergedImage = async (baseImageUrl, overlayImageUrl) => {
+    try {
+        // Fetch both images
+        const [baseImageRes, overlayRes] = await Promise.all([
+            fetch(baseImageUrl),
+            fetch(overlayImageUrl)
+        ]);
 
-    // Create the merged image buffer
-    const mergedBuffer = await sharp(bottomBuffer)
-        .composite([{ input: topBuffer, gravity: 'center' }])
-        .toBuffer();
+        // Convert responses to buffers
+        const [baseImageBuffer, overlayBuffer] = await Promise.all([
+            baseImageRes.arrayBuffer().then(Buffer.from),
+            overlayRes.arrayBuffer().then(Buffer.from)
+        ]);
 
-    // Convert the buffer to base64
-    const base64Image = mergedBuffer.toString('base64');
+        // Get the dimensions of the base image
+        const baseImageMetadata = await sharp(baseImageBuffer).metadata();
+        const isPortrait = baseImageMetadata.height > baseImageMetadata.width;
 
-    // Define the S3 upload parameters
-    const params = {
-        Bucket: process.env.S3_THUMBNAIL_BUCKET_NAME,
-        Key: `merged-images/${Date.now()}.png`, // Unique key for each image
-        Body: Buffer.from(base64Image, 'base64'),
-        ContentType: 'image/png',
-        // ACL: 'public-read' // Make the file publicly readable
-    };
+        // Calculate overlay size (30% of the smallest base image dimension)
+        const overlaySize = Math.min(baseImageMetadata.width, baseImageMetadata.height) * 0.3;
 
-    // Upload the image to S3
-    await s3.putObject(params).promise();
+        // Resize overlay to appropriate size and ensure it's visible
+        const resizedOverlay = await sharp(overlayBuffer)
+            .resize(Math.round(overlaySize), Math.round(overlaySize), {
+                fit: 'contain',
+                background: { r: 0, g: 0, b: 0, alpha: 0 }
+            })
+            .toBuffer();
 
-    // Construct the public URL
-    const publicUrl = `https://${params.Bucket}.s3.${process.env.S3_REGION}.amazonaws.com/${params.Key}`;
+        // Create the merged image buffer with the overlay centered
+        // Resize based on orientation while maintaining aspect ratio
+        const resizeOptions = isPortrait
+            ? { height: 400, fit: 'contain' }  // For portrait, set height to 400
+            : { width: 300, fit: 'contain' };  // For landscape, set width to 300
 
-    return publicUrl;
+        const mergedBuffer = await sharp(baseImageBuffer)
+            .resize(resizeOptions)
+            .composite([{
+                input: resizedOverlay,
+                gravity: 'center'
+            }])
+            .toBuffer();
+
+        // Convert the buffer to base64
+        const base64Image = mergedBuffer.toString('base64');
+
+        // Define the S3 upload parameters
+        const params = {
+            Bucket: process.env.S3_THUMBNAIL_BUCKET_NAME,
+            Key: `merged-images/${Date.now()}.png`,
+            Body: Buffer.from(base64Image, 'base64'),
+            ContentType: 'image/png'
+        };
+
+        // Upload the image to S3
+        await s3.putObject(params).promise();
+
+        // Construct the public URL
+        const publicUrl = `https://${params.Bucket}.s3.${process.env.S3_REGION}.amazonaws.com/${params.Key}`;
+
+        return publicUrl;
+    } catch (error) {
+        console.error('Error in createMergedImage:', error);
+        // Return the original base image URL as fallback
+        return baseImageUrl;
+    }
 };

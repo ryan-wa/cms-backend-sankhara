@@ -26,6 +26,17 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
         return rows;
     };
 
+    // Only show video thumbnail with play button if there's a video
+    const mainImageHtml = post.video
+        ? `<a href="${post.video || '#'}" target="_blank" class="main-image-container">
+            <img src="${videoThumbnailUrl}" alt="Video Thumbnail" class="main-image">
+           </a>`
+        : post.videoThumbnail
+            ? `<div class="main-image-container">
+                <img src="${post.videoThumbnail}" alt="Thumbnail" class="main-image">
+               </div>`
+            : '';
+
     return `
         <!DOCTYPE html>
         <html>
@@ -148,11 +159,7 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
                                         <img src="${DARK_LOGO_URL}" alt="Logo" class="logo">
                                     </div>
                                     <div class="divider"></div>
-                                    ${videoThumbnailUrl ? `
-                                        <a href="${post.video || '#'}" target="_blank" class="main-image-container">
-                                            <img src="${videoThumbnailUrl}" alt="Video Thumbnail" class="main-image">
-                                        </a>
-                                    ` : ''}
+                                    ${mainImageHtml}
                                     ${post.gridImages && post.gridImages.length > 0 ? `
                                         <table cellspacing="10" cellpadding="0" border="0" class="grid-container" style="max-width: ${MAX_IMAGE_DIMENSION}px; margin: 0 auto 25px auto;">
                                             ${createImageRows(post.gridImages).map(row => `
@@ -190,8 +197,12 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
 
 const sendEmails = async (post, recipients, senderEmail = process.env.SENDGRID_FROM_EMAIL, senderName = process.env.SENDGRID_FROM_NAME) => {
     try {
-        const mergedImageUrl = await createMergedImage(PLAY_BUTTON_URL, post.videoThumbnail);
-        const emailTemplate = createEmailTemplate(post, mergedImageUrl);
+        // Only create merged image with play button if there's a video
+        const thumbnailUrl = post.video
+            ? await createMergedImage(PLAY_BUTTON_URL, post.videoThumbnail)
+            : post.videoThumbnail;
+
+        const emailTemplate = createEmailTemplate(post, thumbnailUrl);
         const personalizations = recipients.map(recipient => ({
             to: { email: recipient.email, name: recipient.name }
         }));

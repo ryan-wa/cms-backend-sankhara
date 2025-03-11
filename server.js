@@ -116,20 +116,15 @@ app.get('/sendEmailUpdate', async (req, res) => {
     const formattedPost = formatResponse(latestPost);
     let testRecipients = [];
     if (formattedPost.isTest) {
-      testRecipients = await getTestRecipients(sanityClient);
-      testRecipients.push({
-        email: 'pankaj@sankhara.com',
-        name: 'Pankaj'
-      });
+      // testRecipients = await getTestRecipients(sanityClient);
+      // testRecipients.push({
+      //   email: 'pankaj@sankhara.com',
+      //   name: 'Pankaj'
+      // });
       // Send test emails
-      if (formattedPost.title == 'Sankhara - 006 (24 Feb, 2025)') {
-        await sendEmails(formattedPost, testRecipients);
-      }
+      await sendEmails(formattedPost, testRecipients);
     } else {
-      if (formattedPost.title == 'Sankhara - 006 (24 Feb, 2025)') {
-        console.log('Sending to all recipients');
-        await sendEmails(formattedPost, recipients);
-      }
+      await sendEmails(formattedPost, recipients);
     }
 
     res.status(200).json({

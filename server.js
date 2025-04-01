@@ -114,7 +114,13 @@ app.get('/sendEmailUpdate', async (req, res) => {
     }
 
     const formattedPost = formatResponse(latestPost);
-    let testRecipients = [];
+    let testRecipients = [{
+      email: 'ryan@finches.co',
+      name: 'Ryan'
+    }, {
+      email: 'pankaj@sankhara.com',
+      name: 'Pankaj'
+    }];
     if (formattedPost.isTest) {
       // testRecipients = await getTestRecipients(sanityClient);
       // testRecipients.push({
@@ -270,6 +276,60 @@ app.get('/sendContentEmail', async (req, res) => {
   } catch (error) {
     console.error('Error sending content email:', error);
     res.status(500).send('Error processing content email');
+  }
+});
+
+app.post('/populateUsersFromRecipients', async (req, res) => {
+  try {
+    // Get all recipients
+    const recipients = await getRecipients(sanityClient);
+
+    if (!recipients || recipients.length === 0) {
+      return res.status(404).json({ message: 'No recipients found' });
+    }
+
+    // Create user documents for each recipient
+    const userPromises = recipients.map(async (recipient, index) => {
+      // Generate 5-digit investor ID (00001, 00002, etc.)
+      const investorID = String(index + 1).padStart(5, '0');
+
+      const userDoc = {
+        _type: 'user',
+        name: recipient.name,
+        email: recipient.email,
+        role: 'Investor',
+        investorID: investorID,
+        viewPermissions: {
+          dashboard: true,
+          treasures: true,
+          journal: true,
+          performance: true,
+          directory: true,
+          partners: true
+        }
+      };
+
+      // Create the user document
+      return await sanityClient.create(userDoc);
+    });
+
+    // Wait for all user documents to be created
+    const createdUsers = await Promise.all(userPromises);
+
+    res.status(200).json({
+      message: 'Successfully populated users from recipients',
+      data: {
+        totalRecipients: recipients.length,
+        createdUsers: createdUsers.length,
+        users: createdUsers
+      }
+    });
+  } catch (error) {
+    console.error('Error populating users from recipients:', error);
+    res.status(500).json({
+      message: 'Error populating users from recipients',
+      error: error.message
+    });
   }
 });
 

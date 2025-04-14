@@ -16,8 +16,14 @@ const BACKGROUND_COLOR = '#F7F7F7';
 const createEmailTemplate = (post, videoThumbnailUrl) => {
     const MAX_IMAGE_DIMENSION = 500;  // Maximum dimension for width or height
     const MAX_GRID_IMAGE_DIMENSION = 300;
+    const SINGLE_GRID_IMAGE_DIMENSION = 400;  // Larger size for single grid image
 
     const createImageRows = (images) => {
+        // If there's only one image, return it as a single item array
+        if (images.length === 1) {
+            return [images];
+        }
+
         const rows = [];
         for (let i = 0; i < Math.min(images.length, 6); i += 2) {
             const row = images.slice(i, i + 2);
@@ -45,8 +51,9 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>${post.title}</title>
             <style>
+                @import url('https://api.fontshare.com/v2/css?f[]=general-sans@1&display=swap');
                 body {
-                    font-family: Arial, sans-serif;
+                    font-family: 'General Sans Variable', Arial, sans-serif;
                     line-height: 1.6;
                     color: #333;
                     max-width: 600px;
@@ -72,14 +79,16 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
                     margin: 0 auto 30px auto;
                 }
                 .title {
-                    font-size: 24px;
+                    font-size: 20px;
                     font-weight: bold;
-                    margin-bottom: 25px;
+                    margin-bottom: 15px;
+                    margin-top: 30px;
                     color: #333;
                 }
                 .content {
                     margin-bottom: 30px;
                     text-align: left;
+                    font-size: 15px;
                 }
                 .content p {
                     margin-bottom: 1em;
@@ -94,6 +103,49 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
                 .content p:empty {
                     min-height: 1em;
                     margin: 1em 0;
+                }
+                .notification-label {
+                    background-color: #E74C3C;
+                    color: white;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    display: inline-block;
+                    margin-right: 15px;
+                    margin-bottom: 20px;
+                }
+                .main-image-container {
+                    position: relative;
+                    width: 100%;
+                    max-width: ${MAX_IMAGE_DIMENSION}px;
+                    margin: 0 auto 40px auto;
+                    text-align: center;
+                }
+                .main-image {
+                    max-width: 100%;
+                    max-height: ${MAX_IMAGE_DIMENSION}px;
+                    width: auto;
+                    height: auto;
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
+                .single-grid-image-container {
+                    position: relative;
+                    width: 100%;
+                    max-width: ${SINGLE_GRID_IMAGE_DIMENSION}px;
+                    margin: 0 auto 40px auto;
+                    text-align: center;
+                }
+                .single-grid-image {
+                    max-width: 100%;
+                    max-height: ${SINGLE_GRID_IMAGE_DIMENSION}px;
+                    width: auto;
+                    height: auto;
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;
                 }
                 .grid-container {
                     display: grid;
@@ -115,7 +167,7 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
                         grid-template-columns: repeat(2, 1fr);
                     }
                     td img[alt="Grid Image"] {
-                        width: 140px !important;  /* Make width equal to height */
+                        width: 140px !important;
                         height: 140px !important;
                         object-fit: cover !important;
                     }
@@ -129,22 +181,6 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
                     width: 200px;
                     height: auto;
                     display: block;
-                }
-                .main-image-container {
-                    position: relative;
-                    width: 100%;
-                    max-width: ${MAX_IMAGE_DIMENSION}px;
-                    margin: 0 auto 25px auto;
-                    text-align: center;
-                }
-                .main-image {
-                    max-width: 100%;
-                    max-height: ${MAX_IMAGE_DIMENSION}px;
-                    width: auto;
-                    height: auto;
-                    display: block;
-                    margin-left: auto;
-                    margin-right: auto;
                 }
             </style>
         </head>
@@ -161,20 +197,26 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
                                     <div class="divider"></div>
                                     ${mainImageHtml}
                                     ${post.gridImages && post.gridImages.length > 0 ? `
-                                        <table cellspacing="10" cellpadding="0" border="0" class="grid-container" style="max-width: ${MAX_IMAGE_DIMENSION}px; margin: 0 auto 25px auto;">
-                                            ${createImageRows(post.gridImages).map(row => `
-                                                <tr>
-                                                    ${row.map(imgUrl => `
-                                                        <td style="width: 50%; padding: 5px;">
-                                                            <img src="${imgUrl}" 
-                                                                 alt="Grid Image" 
-                                                                 style="width: 240px; height: 240px; object-fit: cover; display: block; margin: 0 auto;">
-                                                        </td>
-                                                    `).join('')}
-                                                    ${row.length < 2 ? `<td colspan="${2 - row.length}" style="width: ${(2 - row.length) * 50}%;"></td>` : ''}
-                                                </tr>
-                                            `).join('')}
-                                        </table>
+                                        ${post.gridImages.length === 1 ? `
+                                            <div class="single-grid-image-container">
+                                                <img src="${post.gridImages[0]}" alt="Grid Image" class="single-grid-image">
+                                            </div>
+                                        ` : `
+                                            <table cellspacing="10" cellpadding="0" border="0" class="grid-container" style="max-width: ${MAX_IMAGE_DIMENSION}px; margin: 0 auto 25px auto;">
+                                                ${createImageRows(post.gridImages).map(row => `
+                                                    <tr>
+                                                        ${row.map(imgUrl => `
+                                                            <td style="width: 50%; padding: 5px;">
+                                                                <img src="${imgUrl}" 
+                                                                     alt="Grid Image" 
+                                                                     style="width: 240px; height: 240px; object-fit: cover; display: block; margin: 0 auto;">
+                                                            </td>
+                                                        `).join('')}
+                                                        ${row.length < 2 ? `<td colspan="${2 - row.length}" style="width: ${(2 - row.length) * 50}%;"></td>` : ''}
+                                                    </tr>
+                                                `).join('')}
+                                            </table>
+                                        `}
                                     ` : ''}
                                     <div class="content">
                                         <div class="body-text">
@@ -518,8 +560,9 @@ const createContentEmailTemplate = async (content, videoThumbnails = {}) => {
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>${content.title}</title>
             <style>
+                @import url('https://api.fontshare.com/v2/css?f[]=general-sans@1&display=swap');
                 body {
-                    font-family: Arial, sans-serif;
+                    font-family: 'General Sans Variable', Arial, sans-serif;
                     line-height: 1.6;
                     color: #333;
                     max-width: 600px;
@@ -545,14 +588,16 @@ const createContentEmailTemplate = async (content, videoThumbnails = {}) => {
                     margin: 0 auto 30px auto;
                 }
                 .title {
-                    font-size: 24px;
+                    font-size: 20px;
                     font-weight: bold;
-                    margin-bottom: 25px;
+                    margin-bottom: 15px;
+                    margin-top: 30px;
                     color: #333;
                 }
                 .content {
                     margin-bottom: 30px;
                     text-align: left;
+                    font-size: 15px;
                 }
                 .content p {
                     margin-bottom: 1em;
@@ -568,15 +613,43 @@ const createContentEmailTemplate = async (content, videoThumbnails = {}) => {
                     min-height: 1em;
                     margin: 1em 0;
                 }
-                .signature {
-                    margin-top: 30px;
-                    border-top: 1px solid #000;
-                    padding-top: 20px;
+                .notification-label {
+                    background-color: #E74C3C;
+                    color: white;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    display: inline-block;
+                    margin-right: 15px;
+                    margin-bottom: 20px;
                 }
-                .signature img {
-                    width: 200px;
+                .main-image-container {
+                    position: relative;
+                    width: 100%;
+                    max-width: ${MAX_IMAGE_DIMENSION}px;
+                    margin: 0 auto 40px auto;
+                    text-align: center;
+                }
+                .main-image {
+                    max-width: 100%;
+                    max-height: ${MAX_IMAGE_DIMENSION}px;
+                    width: auto;
                     height: auto;
                     display: block;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
+                .read-more-button {
+                    display: inline-block;
+                    padding: 10px 20px;
+                    background-color: #549E9A;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    margin-top: 20px;
+                    font-family: 'General Sans Variable', Arial, sans-serif;
+                    font-size: 14px;
                 }
             </style>
         </head>

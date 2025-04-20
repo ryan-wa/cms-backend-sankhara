@@ -52,24 +52,26 @@ app.get('/sendEmailUpdateTest', async (req, res) => {
 
     const formattedPost = formatResponse(latestPost);
 
-    if (formattedPost.isTest) {
-      let testRecipients = await getTestRecipients(sanityClient);
-      testRecipients.push({
-        email: 'ryan@finches.co',
-        name: 'Ryan'
-      });
-      // Send test emails
-      await sendEmails(formattedPost, testRecipients);
-    } else {
-      // Send emails to all recipients
-      await sendEmails(formattedPost, recipients, 'ryan@sankhara.com', 'Ryan');
+    if (recipients.length == 2) {
+      if (formattedPost.isTest) {
+        let testRecipients = await getTestRecipients(sanityClient);
+        testRecipients.push({
+          email: 'ryan@finches.co',
+          name: 'Ryan'
+        });
+        // Send test emails
+        await sendEmails(formattedPost, testRecipients);
+      } else {
+        // Send emails to all recipients
+        await sendEmails(formattedPost, recipients, 'ryan@sankhara.com', 'Ryan');
+      }
     }
 
     res.status(200).json({
-      message: 'Successfully sent email updates to all recipients',
+      message: recipients.length == 2 ? 'Successfully sent email updates to all recipients' : 'Did not find 2 recipients',
       data: {
         post: formattedPost,
-        recipientCount: recipients.length
+        recipientCount: recipients.length,
       }
     });
   } catch (error) {

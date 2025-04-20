@@ -35,11 +35,11 @@ const createEmailTemplate = (post, videoThumbnailUrl) => {
     // Only show video thumbnail with play button if there's a video
     const mainImageHtml = post.video
         ? `<a href="${post.video || '#'}" target="_blank" class="main-image-container">
-            <img src="${videoThumbnailUrl}" alt="Video Thumbnail" class="main-image">
+            <img src="${videoThumbnailUrl}" alt="" class="main-image">
            </a>`
         : post.videoThumbnail
             ? `<div class="main-image-container">
-                <img src="${post.videoThumbnail}" alt="Thumbnail" class="main-image">
+                <img src="${post.videoThumbnail}" alt="" class="main-image">
                </div>`
             : '';
 
@@ -241,7 +241,7 @@ const sendEmails = async (post, recipients, senderEmail = process.env.SENDGRID_F
     try {
         // Only create merged image with play button if there's a video
         const thumbnailUrl = post.video
-            ? await createMergedImage(PLAY_BUTTON_URL, post.videoThumbnail)
+            ? await createMergedImage(post.videoThumbnail, PLAY_BUTTON_URL)
             : post.videoThumbnail;
 
         const emailTemplate = createEmailTemplate(post, thumbnailUrl);

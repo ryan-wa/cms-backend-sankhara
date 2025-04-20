@@ -315,27 +315,32 @@ module.exports.createMergedImage = async (baseImageUrl, overlayImageUrl) => {
         const baseImageMetadata = await sharp(baseImageBuffer).metadata();
         const isPortrait = baseImageMetadata.height > baseImageMetadata.width;
 
-        // Calculate overlay size (30% of the smallest base image dimension)
-        const overlaySize = Math.min(baseImageMetadata.width, baseImageMetadata.height) * 0.3;
+        // First resize the base image (thumbnail) to appropriate size
+        const resizeOptions = isPortrait
+            ? { height: 300, fit: 'contain' }  // For portrait, set height to 400
+            : { width: 300, fit: 'contain' };  // For landscape, set width to 400
 
-        // Resize overlay to appropriate size and ensure it's visible
-        const resizedOverlay = await sharp(overlayBuffer)
-            .resize(Math.round(overlaySize), Math.round(overlaySize), {
-                fit: 'contain',
-                background: { r: 0, g: 0, b: 0, alpha: 0 }
+        const resizedBaseBuffer = await sharp(baseImageBuffer)
+            .resize(resizeOptions)
+            .toBuffer();
+
+        // Get dimensions of resized base image
+        const resizedMetadata = await sharp(resizedBaseBuffer).metadata();
+
+        // Calculate play button size (35% of the smallest dimension)
+        const playButtonSize = Math.min(resizedMetadata.width, resizedMetadata.height) * 0.40;
+
+        // Resize the play button
+        const resizedPlayButton = await sharp(overlayBuffer)
+            .resize(Math.round(playButtonSize), Math.round(playButtonSize), {
+                fit: 'contain'
             })
             .toBuffer();
 
-        // Create the merged image buffer with the overlay centered
-        // Resize based on orientation while maintaining aspect ratio
-        const resizeOptions = isPortrait
-            ? { height: 400, fit: 'contain' }  // For portrait, set height to 400
-            : { width: 300, fit: 'contain' };  // For landscape, set width to 300
-
-        const mergedBuffer = await sharp(baseImageBuffer)
-            .resize(resizeOptions)
+        // Create the merged image with the play button centered on top
+        const mergedBuffer = await sharp(resizedBaseBuffer)
             .composite([{
-                input: resizedOverlay,
+                input: resizedPlayButton,
                 gravity: 'center'
             }])
             .toBuffer();

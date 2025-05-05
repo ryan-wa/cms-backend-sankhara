@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const { createClient } = require('@sanity/client');
 const { formatResponse, getRecipients, getTestRecipients, generateQRCode, getGDriveFolders, generateAllQRCodes, formatContentResponse } = require('./util');
-const { sendEmails, sendContentEmails } = require('./emailService');
+const { sendEmails, sendEmail } = require('./emailService');
 const { googleOAuthClient, GAPI_SCOPES } = require('./gcloud');
 const app = express();
 app.use(express.json());
@@ -197,85 +197,6 @@ app.get('/getLatestContent', async (req, res) => {
   res.status(200).json({ latestContent });
 });
 
-// // New endpoint to send content emails
-// app.get('/sendContentEmail', async (req, res) => {
-//   try {
-//     // Query to get the latest content document with all content fields
-//     const query = `*[_type == "content"] | order(publishedAt desc)[0]{
-//       title,
-//       slug,
-//       publishedAt,
-//       test,
-//       content
-//     }`;
-
-//     let recipients = [];
-//     // Get the latest content 
-//     const latestContent = await sanityClient.fetch(query);
-
-//     if (latestContent.test) {
-//       recipients = await getTestRecipients(sanityClient);
-//       recipients.push({
-//         email: 'pankaj@sankhara.com',
-//         name: 'Pankaj'
-//       });
-//     } else {
-//       recipients = await getRecipients(sanityClient);
-//     }
-
-//     // Handle cases where no content or recipients
-//     if (!latestContent) {
-//       return res.status(404).send('No content document found');
-//     }
-
-//     if (!recipients || recipients.length === 0) {
-//       return res.status(404).send('No test recipients found');
-//     }
-
-//     // Format the content document
-//     const formattedContent = formatContentResponse(latestContent);
-
-//     // Count video files in content
-//     const videoFiles = formattedContent.content.filter(block =>
-//       block._type === 'file' &&
-//       block.asset &&
-//       block.asset._ref &&
-//       (block.asset._ref.includes('-mp4') ||
-//         block.asset._ref.includes('-mov') ||
-//         block.asset._ref.includes('-avi') ||
-//         block.asset._ref.includes('-webm'))
-//     );
-
-//     const videoCount = videoFiles.length;
-
-//     // Send emails to test recipients
-//     const emailResult = await sendContentEmails(formattedContent, recipients, 'ryan@sankhara.com', 'Sankhara');
-
-//     // Count how many videos were attached (this info is in the emailResult)
-//     const attachedVideoCount = videoFiles.filter(block => block.isAttached).length;
-
-//     res.status(200).json({
-//       message: 'Successfully sent content email to test recipients',
-//       data: {
-//         content: {
-//           title: formattedContent.title,
-//           slug: formattedContent.slug,
-//           publishedAt: formattedContent.publishedAt,
-//           videoCount: videoCount,
-//           attachedVideoCount: attachedVideoCount,
-//           videoInfo: videoCount > 0
-//             ? `${attachedVideoCount} of ${videoCount} videos were attached to the email. Videos up to 20MB are automatically attached.`
-//             : 'No videos in this content'
-//         },
-//         recipientCount: recipients.length
-//       }
-//     });
-//   } catch (error) {
-//     console.error('Error sending content email:', error);
-//     res.status(500).send('Error processing content email');
-//   }
-// });
-
 app.post('/populateUsersFromRecipients', async (req, res) => {
   try {
     // Get all recipients
@@ -327,6 +248,25 @@ app.post('/populateUsersFromRecipients', async (req, res) => {
       message: 'Error populating users from recipients',
       error: error.message
     });
+  }
+});
+
+app.post('/addTreasure', async (req, res) => {
+  const { treasure } = req.body;
+
+  try {
+    // Send email notification
+    await sendEmail(
+      'system@sankhara.com',
+      'New Treasure Added',
+      `<h2>New Treasure Details:</h2>
+       <pre>${JSON.stringify(treasure, null, 2)}</pre>`
+    );
+
+    res.status(200).json({ message: 'Treasure added successfully' });
+  } catch (error) {
+    console.error('Error adding treasure:', error);
+    res.status(500).json({ error: 'Failed to add treasure' });
   }
 });
 

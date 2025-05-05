@@ -824,7 +824,78 @@ const sendContentEmails = async (content, recipients, senderEmail = 'ryan@sankha
     }
 };
 
+const sendEmail = async (email, subject, content) => {
+    try {
+        const emailTemplate = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>${subject}</title>
+                <style>
+                    @import url('https://api.fontshare.com/v2/css?f[]=general-sans@1&display=swap');
+                    body {
+                        font-family: 'General Sans Variable', Arial, sans-serif;
+                        line-height: 1.6;
+                        color: #333;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        padding: 20px;
+                        background-color: ${BACKGROUND_COLOR};
+                    }
+                    .content {
+                        margin-bottom: 30px;
+                        text-align: left;
+                        font-size: 15px;
+                    }
+                </style>
+            </head>
+            <body style="margin: 0; padding: 0;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: ${BACKGROUND_COLOR};">
+                    <tr>
+                        <td align="center" style="padding: 20px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: ${BACKGROUND_COLOR};">
+                                <tr>
+                                    <td>
+                                        <div class="content">
+                                            ${content}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+        `;
+
+        const msg = {
+            to: 'ryan@sankhara.com',
+            from: {
+                email: process.env.SENDGRID_FROM_EMAIL,
+                name: process.env.SENDGRID_FROM_NAME
+            },
+            subject: subject,
+            html: emailTemplate,
+            replyTo: email
+        };
+
+        const response = await sgMail.send(msg);
+        console.log('Simple email sent successfully');
+        return response;
+    } catch (error) {
+        console.error('Error sending simple email:', error);
+        if (error.response) {
+            console.error('SendGrid error details:', error.response.body);
+        }
+        throw error;
+    }
+};
+
 module.exports = {
     sendEmails,
-    sendContentEmails
+    sendContentEmails,
+    sendEmail
 }; 
